@@ -1,5 +1,9 @@
-use anyhow::Result;
-use std::path::Path;
+use anyhow::{bail, Result};
+use std::{
+    fs::File,
+    io::Write,
+    path::{Path, PathBuf},
+};
 
 use clap::{command, Parser, Subcommand};
 use directories::BaseDirs;
@@ -103,37 +107,94 @@ struct Cli {
 enum Commands {
     /// Lists all contexts
     List {},
+    /// Select context (cluster) to use
+    Select {
+        // The context name
+        #[clap(short, long)]
+        name: String,
+    },
 }
 
-fn load_kubeconfig() -> Result<KubeConfig> {
-    let base_dirs = BaseDirs::new().unwrap();
-    let home_dir = base_dirs.home_dir();
-    let kubeconfig_str = std::fs::read_to_string(home_dir.join(Path::new(".kube/config")))?;
-    let kubeconfig: KubeConfig = serde_yml::from_str(&kubeconfig_str)?;
-    Ok(kubeconfig)
+struct Kman {
+    kubeconfig: KubeConfig,
 }
 
-fn list_contexts(kubeconfig: KubeConfig) {
-    for ctx in kubeconfig.contexts {
+impl Kman {
+    fn new(kubeconfig: KubeConfig) -> Self {
+        Self { kubeconfig }
+    }
+
+    fn list_contexts(&self) -> Result<String> {
         let mut out = String::new();
-        if ctx.name == kubeconfig.current_context {
-            out.push_str("* ");
+
+        for ctx in &self.kubeconfig.contexts {
+            if ctx.name == self.kubeconfig.current_context {
+                out.push_str("* ");
+            }
+            out.push_str(&ctx.name);
+            out.push('\n');
         }
-        out.push_str(&ctx.name);
-        println!("{out}");
+
+        Ok(out)
+    }
+
+    fn select_context(&mut self, name: String) -> Result<()> {
+        let mut found = false;
+        for ctx in &self.kubeconfig.contexts {
+            if ctx.name == name {
+                self.kubeconfig.current_context = name.clone();
+                found = true;
+            }
+        }
+
+        if !found {
+            bail!("Context does not exist");
+        }
+
+        Ok(())
+    }
+
+    fn update_kubeconfig(&self, kubeconfig_location: &PathBuf) -> Result<()> {
+        let yaml = serde_yml::to_string(&self.kubeconfig)?;
+        let mut kubeconfig = File::create(kubeconfig_location)?;
+        kubeconfig.write_all(yaml.as_bytes())?;
+        Ok(())
+    }
+
+    fn load_kubeconfig(kubeconfig_location: &PathBuf) -> Result<KubeConfig> {
+        let kubeconfig_str = std::fs::read_to_string(kubeconfig_location)?;
+        let kubeconfig: KubeConfig = serde_yml::from_str(&kubeconfig_str)?;
+        Ok(kubeconfig)
     }
 }
 
-fn main() {
+fn main() -> Result<()> {
+    // cluster > context > user
+    // for now, we assume that clusters:contexts:users is a 1:1:1 ratio
+    // just tell users to delete their kubeconfig lol?
+    // assuming a "perfect" kubeconfig, all this CLI has to do is update the token
     let cli = Cli::parse();
     env_logger::Builder::new()
         .filter_level(cli.verbose.log_level_filter())
         .init();
 
-    let kubeconfig = load_kubeconfig().unwrap();
-    if let Some(command) = &cli.command {
+    let base_dirs = BaseDirs::new().unwrap();
+    // for now assuming we always use $HOME/.kube/
+    let kubeconfig_location = base_dirs.home_dir().join(Path::new(".kube/config"));
+    let kubeconfig = Kman::load_kubeconfig(&kubeconfig_location).unwrap();
+    let mut kman = Kman::new(kubeconfig);
+
+    if let Some(command) = cli.command {
         match command {
-            Commands::List {} => list_contexts(kubeconfig),
+            Commands::List {} => {
+                print!("{}", kman.list_contexts().unwrap());
+            }
+            Commands::Select { name } => {
+                kman.select_context(name).unwrap();
+            }
         }
     }
+
+    kman.update_kubeconfig(&kubeconfig_location)?;
+    Ok(())
 }
