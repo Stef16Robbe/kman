@@ -1,5 +1,7 @@
+use anyhow::Result;
 use std::path::Path;
 
+use clap::{command, Parser, Subcommand};
 use directories::BaseDirs;
 use serde::{Deserialize, Serialize};
 
@@ -87,10 +89,42 @@ struct Context {
     namespace: Option<String>,
 }
 
-fn main() {
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None, arg_required_else_help = true)]
+struct Cli {
+    #[command(flatten)]
+    verbose: clap_verbosity_flag::Verbosity,
+
+    #[command(subcommand)]
+    command: Option<Commands>,
+}
+
+#[derive(Subcommand, Debug)]
+enum Commands {
+    /// Lists all contexts
+    List {},
+}
+
+fn load_kubeconfig() -> Result<KubeConfig> {
     let base_dirs = BaseDirs::new().unwrap();
     let home_dir = base_dirs.home_dir();
-    let kubeconfig_str = std::fs::read_to_string(home_dir.join(Path::new(".kube/config"))).unwrap();
-    let kubeconfig: KubeConfig = serde_yml::from_str(&kubeconfig_str).unwrap();
-    println!("{:?}", kubeconfig);
+    let kubeconfig_str = std::fs::read_to_string(home_dir.join(Path::new(".kube/config")))?;
+    let kubeconfig: KubeConfig = serde_yml::from_str(&kubeconfig_str)?;
+    Ok(kubeconfig)
+}
+
+fn main() {
+    let cli = Cli::parse();
+    env_logger::Builder::new()
+        .filter_level(cli.verbose.log_level_filter())
+        .init();
+
+    let kubeconfig = load_kubeconfig().unwrap();
+    if let Some(command) = &cli.command {
+        match command {
+            Commands::List {} => {
+                dbg!(kubeconfig);
+            }
+        }
+    }
 }
