@@ -1,4 +1,6 @@
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
+use dialoguer::{theme::ColorfulTheme, Input};
+use regex::Regex;
 use std::{
     fs::File,
     io::Write,
@@ -79,12 +81,12 @@ struct NamedContext {
     /// Name is the nickname for this Context
     name: String,
     /// Context holds the context information
-    context: Context,
+    context: ClusterContext,
 }
 
 /// Context is a tuple of references to a cluster (how do I communicate with a Kubernetes cluster), a user (how do I identify myself), and a namespace (what subset of resources do I want to work with)
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
-struct Context {
+struct ClusterContext {
     /// Cluster is the name of the cluster for this context
     cluster: String,
     /// User is the user info for this context
@@ -109,9 +111,16 @@ enum Commands {
     List {},
     /// Select context (cluster) to use
     Select {
-        // The context name
+        /// The context name
         #[clap(short, long)]
         name: String,
+    },
+    /// Refresh context (cluster) credentials
+    Refresh {
+        /// The context name
+        #[clap(short, long)]
+        name: Option<String>,
+        // TODO: add `--all` option
     },
 }
 
@@ -122,6 +131,14 @@ struct Kman {
 impl Kman {
     fn new(kubeconfig: KubeConfig) -> Self {
         Self { kubeconfig }
+    }
+
+    fn check_cluster_exists(&self, name: &String) -> bool {
+        self.kubeconfig
+            .contexts
+            .iter()
+            .find(|c| c.context.cluster == *name)
+            .is_some()
     }
 
     fn list_contexts(&self) -> Result<String> {
@@ -138,6 +155,7 @@ impl Kman {
         Ok(out)
     }
 
+    // TODO: add auto-check for expired credentials
     fn select_context(&mut self, name: String) -> Result<()> {
         let mut found = false;
         for ctx in &self.kubeconfig.contexts {
@@ -158,6 +176,93 @@ impl Kman {
         let yaml = serde_yml::to_string(&self.kubeconfig)?;
         let mut kubeconfig = File::create(kubeconfig_location)?;
         kubeconfig.write_all(yaml.as_bytes())?;
+
+        Ok(())
+    }
+
+    fn get_api_from_cluster(&self, cluster: &String) -> String {
+        // TODO: double-check that unwrap
+        self.kubeconfig
+            .clusters
+            .iter()
+            .find(|c| &c.name == cluster)
+            .unwrap()
+            .cluster
+            .server
+            .clone()
+    }
+
+    fn get_cluster_from_context_name(&self, context: &String) -> String {
+        // TODO: double-check that unwrap
+        self.kubeconfig
+            .contexts
+            .iter()
+            .find(|c| &c.name == context)
+            .unwrap()
+            .context
+            .cluster
+            .clone()
+    }
+
+    fn get_user_from_cluster_name(&self, cluster_name: String) -> String {
+        self.kubeconfig
+            .contexts
+            .iter()
+            .find(|c| c.context.cluster == cluster_name)
+            .unwrap()
+            .context
+            .user
+            .clone()
+    }
+
+    fn update_token(&mut self, name: Option<String>) -> Result<()> {
+        let cluster_to_update = if let Some(name) = name {
+            self.get_cluster_from_context_name(&name)
+        } else {
+            self.kubeconfig
+                .current_context
+                .clone()
+                .splitn(3, '/')
+                .nth(1)
+                .unwrap()
+                .to_string()
+        };
+
+        if !self.check_cluster_exists(&cluster_to_update) {
+            bail!("Context does not exist");
+        }
+
+        // get context API url
+        // req to <api>/oauth/token/request
+        // problem is, we need oc/openshift to generate the url for us
+        // second problem is, we cannot open it in default browser, we run it in incognito window
+        let _api_url = self.get_api_from_cluster(&cluster_to_update);
+
+        // have: https://api.openshift.com:6443
+        // need: https://oauth-openshift.openshift.com/oauth/token/request
+        // this is NOT a simple find&replace, FQDN could contain subsections for non-api routing
+
+        // start simple!
+
+        let token: String = Input::with_theme(&ColorfulTheme::default())
+            .with_prompt("Request a token in the console and paste it in here: ")
+            .interact_text()?;
+
+        let pattern = r"sha256~[A-Za-z0-9+/=]{43}";
+        let re = Regex::new(pattern).context("failed to compile regex")?;
+
+        if re.is_match(&token) {
+            let user = self.get_user_from_cluster_name(cluster_to_update);
+            for u in &mut self.kubeconfig.users {
+                if u.name == user {
+                    u.user.token = token;
+                    break;
+                }
+            }
+        } else {
+            bail!("Incorrect token given");
+        }
+
         Ok(())
     }
 
@@ -192,6 +297,7 @@ fn main() -> Result<()> {
             Commands::Select { name } => {
                 kman.select_context(name).unwrap();
             }
+            Commands::Refresh { name } => kman.update_token(name).unwrap(),
         }
     }
 
