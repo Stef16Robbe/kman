@@ -48,10 +48,10 @@ struct NamedCluster {
     cluster: Cluster,
 }
 
-/// Cluster contains information about how to communicate with a kubernetes cluster
+/// Cluster contains information about how to communicate with a Kubernetes cluster
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 struct Cluster {
-    /// Server is the address of the kubernetes cluster (https://hostname:port).
+    /// Server is the address of the Kubernetes cluster (https://hostname:port).
     server: String,
     /// TLSServerName is used to check server certificate. If TLSServerName is empty, the hostname used to contact the server is used.
     tls_server_name: Option<String>,
@@ -65,7 +65,7 @@ struct Cluster {
     ///
     /// socks5 proxying does not currently support spdy streaming endpoints (exec, attach, port forward).
     proxy_url: Option<String>,
-    /// DisableCompression allows client to opt-out of response compression for all requests to the server. This is useful to speed up requests (specifically lists) when client-server network bandwidth is ample, by saving time on compression (server-side) and decompression (client-side): https://github.com/kubernetes/kubernetes/issues/112296.
+    /// DisableCompression allows client to opt-out of response compression for all requests to the server. This is useful to speed up requests (specifically lists) when client-server network bandwidth is ample, by saving time on compression (server-side) and decompression (client-side): https://github.com/Kubernetes/Kubernetes/issues/112296.
     disable_compression: Option<bool>,
 }
 
@@ -78,7 +78,7 @@ struct NamedContext {
     context: Context,
 }
 
-/// Context is a tuple of references to a cluster (how do I communicate with a kubernetes cluster), a user (how do I identify myself), and a namespace (what subset of resources do I want to work with)
+/// Context is a tuple of references to a cluster (how do I communicate with a Kubernetes cluster), a user (how do I identify myself), and a namespace (what subset of resources do I want to work with)
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 struct Context {
     /// Cluster is the name of the cluster for this context
@@ -113,6 +113,17 @@ fn load_kubeconfig() -> Result<KubeConfig> {
     Ok(kubeconfig)
 }
 
+fn list_contexts(kubeconfig: KubeConfig) {
+    for ctx in kubeconfig.contexts {
+        let mut out = String::new();
+        if ctx.name == kubeconfig.current_context {
+            out.push_str("* ");
+        }
+        out.push_str(&ctx.name);
+        println!("{out}");
+    }
+}
+
 fn main() {
     let cli = Cli::parse();
     env_logger::Builder::new()
@@ -122,9 +133,7 @@ fn main() {
     let kubeconfig = load_kubeconfig().unwrap();
     if let Some(command) = &cli.command {
         match command {
-            Commands::List {} => {
-                dbg!(kubeconfig);
-            }
+            Commands::List {} => list_contexts(kubeconfig),
         }
     }
 }
