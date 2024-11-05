@@ -9,7 +9,7 @@ This way you retain a minimal amount of contexts that you can properly name & id
 
 ## How do I install it
 
-1. Download a binary from the [releases section](https://github.com/Stef16Robbe/rgtui/releases).
+1. Download a binary from the [releases section](https://github.com/Stef16Robbe/kman/releases).
 2. Add the binary to your `$PATH`
 
 ## How do I use it
