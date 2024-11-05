@@ -9,7 +9,8 @@ This way you retain a minimal amount of contexts that you can properly name & id
 
 ## How do I install it
 
-`todo!();`
+1. Download a binary from the [releases section](https://github.com/Stef16Robbe/rgtui/releases).
+2. Add the binary to your `$PATH`
 
 ## How do I use it
 
@@ -31,8 +32,9 @@ Options:
 
 ## TODO's
 
-- [ ] CI & releases
+- [x] CI & releases
 - [ ] Proper error handling
 - [ ] Logging
 - [ ] Tests
 - [ ] Find easier way to refresh token (less manual actions)
+- [ ] Incorporate in `brew`
