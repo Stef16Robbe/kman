@@ -1,6 +1,7 @@
 use anyhow::{bail, Context, Result};
 use colored::Colorize;
 use dialoguer::{theme::ColorfulTheme, Input};
+use human_panic::{setup_panic, Metadata};
 use kubeconfig::KubeConfig;
 use regex::Regex;
 use std::{
@@ -146,6 +147,13 @@ impl Kman {
 }
 
 fn main() -> Result<()> {
+    setup_panic!(
+        Metadata::new(env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"))
+            .authors("Stef Robbe <stef.robbe@protonmail.com>")
+            .homepage("https://github.com/stef16robbe/kman")
+            .support("- Open an issue on the Github repo")
+    );
+
     let cli = Cli::parse();
     env_logger::Builder::new()
         .filter_level(cli.verbose.log_level_filter())
