@@ -4,6 +4,7 @@ use dialoguer::{theme::ColorfulTheme, Input};
 use human_panic::{setup_panic, Metadata};
 use kubeconfig::KubeConfig;
 use regex::Regex;
+use roxygen::roxygen;
 use std::{
     fs::File,
     io::Write,
@@ -44,15 +45,24 @@ enum Commands {
     },
 }
 
+/// Struct used for state management
 struct Kman {
+    /// The parsed kubeconfig from the user's home directory
     kubeconfig: KubeConfig,
 }
 
 impl Kman {
-    fn new(kubeconfig: KubeConfig) -> Self {
+    #[roxygen]
+    /// Create a new instance of [Kman]
+    fn new(
+        /// The kubeconfig loaded from disk
+        kubeconfig: KubeConfig,
+    ) -> Self {
         Self { kubeconfig }
     }
 
+    /// This function prints out the current existing contexts,
+    /// and shows which is active
     fn list_contexts(&self) -> Result<String> {
         let mut out = String::new();
 
@@ -69,12 +79,18 @@ impl Kman {
         Ok(out)
     }
 
+    #[roxygen]
+    /// Updates the kubeconfig's current-context to the given context name
     // TODO: add auto-check for expired credentials
-    fn select_context(&mut self, name: String) -> Result<()> {
+    fn select_context(
+        &mut self,
+        /// The context name to use
+        context_name: String,
+    ) -> Result<()> {
         let mut found = false;
         for ctx in &self.kubeconfig.contexts {
-            if ctx.name == name {
-                self.kubeconfig.current_context = name.clone();
+            if ctx.name == context_name {
+                self.kubeconfig.current_context = context_name.clone();
                 found = true;
             }
         }
@@ -83,12 +99,18 @@ impl Kman {
             bail!("Context does not exist");
         }
 
-        println!("Now using context: {}", name.green().bold());
+        println!("Now using context: {}", context_name.green().bold());
 
         Ok(())
     }
 
-    fn update_kubeconfig(&self, kubeconfig_location: &PathBuf) -> Result<()> {
+    #[roxygen]
+    /// Overwrite the user's kubeconfig with an updated one
+    fn update_kubeconfig(
+        &self,
+        /// The location of the kubeconfig to override
+        kubeconfig_location: &PathBuf,
+    ) -> Result<()> {
         let yaml = serde_yml::to_string(&self.kubeconfig)?;
         let mut kubeconfig = File::create(kubeconfig_location)?;
         kubeconfig.write_all(yaml.as_bytes())?;
@@ -96,7 +118,13 @@ impl Kman {
         Ok(())
     }
 
-    fn get_user_from_context_name(&self, context_name: String) -> String {
+    #[roxygen]
+    /// Get a "user" from the given context name
+    fn get_user_from_context_name(
+        &self,
+        /// The context name to use
+        context_name: String,
+    ) -> String {
         self.kubeconfig
             .contexts
             .iter()
@@ -107,12 +135,14 @@ impl Kman {
             .clone()
     }
 
-    fn update_token(&mut self, name: Option<String>) -> Result<()> {
-        let context_to_update = if let Some(name) = name {
-            name
-        } else {
-            self.kubeconfig.current_context.clone()
-        };
+    #[roxygen]
+    /// Update a context token based on user input
+    fn update_token(
+        &mut self,
+        /// The context name to use
+        context_name: Option<String>,
+    ) -> Result<()> {
+        let context_to_update = context_name.unwrap_or(self.kubeconfig.current_context.clone());
 
         let user = self.get_user_from_context_name(context_to_update);
 
@@ -139,7 +169,12 @@ impl Kman {
         Ok(())
     }
 
-    fn load_kubeconfig(kubeconfig_location: &PathBuf) -> Result<KubeConfig> {
+    #[roxygen]
+    /// Load a kubeconfig from disk
+    fn load_kubeconfig(
+        /// The kubeconfig file location
+        kubeconfig_location: &PathBuf,
+    ) -> Result<KubeConfig> {
         let kubeconfig_str = std::fs::read_to_string(kubeconfig_location)?;
         let kubeconfig: KubeConfig = serde_yml::from_str(&kubeconfig_str)?;
         Ok(kubeconfig)

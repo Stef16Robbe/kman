@@ -358,6 +358,7 @@ dependencies = [
  "env_logger",
  "human-panic",
  "regex",
+ "roxygen",
  "serde",
  "serde_yml",
 ]
@@ -510,6 +511,17 @@ name = "regex-syntax"
 version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2b15c43186be67a4fd63bee50d0303afffcef381492ebe2c5d87f324e1b8815c"
+
+[[package]]
+name = "roxygen"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2c1cfc919a9f13a930e9be3d177fad9a97808edaa2db60d83285aace8871c6bc"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
 
 [[package]]
 name = "rustc-demangle"
