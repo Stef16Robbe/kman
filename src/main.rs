@@ -134,14 +134,6 @@ impl Kman {
         Self { kubeconfig }
     }
 
-    fn check_cluster_exists(&self, name: &String) -> bool {
-        self.kubeconfig
-            .contexts
-            .iter()
-            .find(|c| c.context.cluster == *name)
-            .is_some()
-    }
-
     fn list_contexts(&self) -> Result<String> {
         let mut out = String::new();
 
@@ -185,23 +177,11 @@ impl Kman {
         Ok(())
     }
 
-    fn get_cluster_from_context_name(&self, context: &String) -> String {
-        // TODO: double-check that unwrap
+    fn get_user_from_context_name(&self, context_name: String) -> String {
         self.kubeconfig
             .contexts
             .iter()
-            .find(|c| &c.name == context)
-            .unwrap()
-            .context
-            .cluster
-            .clone()
-    }
-
-    fn get_user_from_cluster_name(&self, cluster_name: String) -> String {
-        self.kubeconfig
-            .contexts
-            .iter()
-            .find(|c| c.context.cluster == cluster_name)
+            .find(|c| c.name == context_name)
             .unwrap()
             .context
             .user
@@ -209,31 +189,22 @@ impl Kman {
     }
 
     fn update_token(&mut self, name: Option<String>) -> Result<()> {
-        let cluster_to_update = if let Some(name) = name {
-            self.get_cluster_from_context_name(&name)
+        let context_to_update = if let Some(name) = name {
+            name
         } else {
-            self.kubeconfig
-                .current_context
-                .clone()
-                .splitn(3, '/')
-                .nth(1)
-                .unwrap()
-                .to_string()
+            self.kubeconfig.current_context.clone()
         };
 
-        if !self.check_cluster_exists(&cluster_to_update) {
-            bail!("Context does not exist");
-        }
+        let user = self.get_user_from_context_name(context_to_update);
 
         let token: String = Input::with_theme(&ColorfulTheme::default())
-            .with_prompt("Request a token (sha256~xxx...) in the console and paste it in here: ")
+            .with_prompt("Request a token (sha256~xxx...) in the console and paste it in here:")
             .interact_text()?;
 
-        let pattern = r"sha256~[A-Za-z0-9+/=]{43}";
+        let pattern = r"sha256~[A-Za-z0-9\-\_+\/=]{43}";
         let re = Regex::new(pattern).context("failed to compile regex")?;
 
         if re.is_match(&token) {
-            let user = self.get_user_from_cluster_name(cluster_to_update);
             for u in &mut self.kubeconfig.users {
                 if u.name == user {
                     u.user.token = token;
