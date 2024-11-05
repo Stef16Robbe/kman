@@ -4,7 +4,7 @@ A very specific Kubeconfig MANager...
 
 ## What is it
 
-It's simple; `kman` allows you to update Kubernetes oauth tokens in your kubeconfig.
+It's simple; `kman` helps you in updating (expired) Kubernetes oauth tokens in your kubeconfig.
 This way you retain a minimal amount of contexts that you can properly name & identify.
 
 ## How do I install it
@@ -35,3 +35,4 @@ Options:
 - [ ] Proper error handling
 - [ ] Logging
 - [ ] Tests
+- [ ] Find easier way to refresh token (less manual actions)
