@@ -1,4 +1,5 @@
 use anyhow::{bail, Context, Result};
+use colored::Colorize;
 use dialoguer::{theme::ColorfulTheme, Input};
 use regex::Regex;
 use std::{
@@ -146,9 +147,11 @@ impl Kman {
 
         for ctx in &self.kubeconfig.contexts {
             if ctx.name == self.kubeconfig.current_context {
-                out.push_str("* ");
+                out.push_str(&format!("{}", "* ".green().bold()));
+                out.push_str(&format!("{}", ctx.name.green()));
+            } else {
+                out.push_str(&ctx.name);
             }
-            out.push_str(&ctx.name);
             out.push('\n');
         }
 
@@ -168,6 +171,8 @@ impl Kman {
         if !found {
             bail!("Context does not exist");
         }
+
+        println!("Now using context: {}", name.green().bold());
 
         Ok(())
     }
@@ -239,6 +244,8 @@ impl Kman {
             bail!("Incorrect token given");
         }
 
+        println!("{}", "Token updated succesfully!".green().bold());
+
         Ok(())
     }
 
@@ -264,7 +271,12 @@ fn main() -> Result<()> {
     if let Some(command) = cli.command {
         match command {
             Commands::List {} => {
-                print!("{}", kman.list_contexts().unwrap());
+                let contexts = kman.list_contexts().unwrap();
+                println!(
+                    "{}\n\n{}",
+                    "Here are your current contexts:".bold(),
+                    contexts
+                );
             }
             Commands::Select { name } => {
                 kman.select_context(name).unwrap();
