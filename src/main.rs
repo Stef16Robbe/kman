@@ -180,18 +180,6 @@ impl Kman {
         Ok(())
     }
 
-    fn get_api_from_cluster(&self, cluster: &String) -> String {
-        // TODO: double-check that unwrap
-        self.kubeconfig
-            .clusters
-            .iter()
-            .find(|c| &c.name == cluster)
-            .unwrap()
-            .cluster
-            .server
-            .clone()
-    }
-
     fn get_cluster_from_context_name(&self, context: &String) -> String {
         // TODO: double-check that unwrap
         self.kubeconfig
@@ -232,20 +220,8 @@ impl Kman {
             bail!("Context does not exist");
         }
 
-        // get context API url
-        // req to <api>/oauth/token/request
-        // problem is, we need oc/openshift to generate the url for us
-        // second problem is, we cannot open it in default browser, we run it in incognito window
-        let _api_url = self.get_api_from_cluster(&cluster_to_update);
-
-        // have: https://api.openshift.com:6443
-        // need: https://oauth-openshift.openshift.com/oauth/token/request
-        // this is NOT a simple find&replace, FQDN could contain subsections for non-api routing
-
-        // start simple!
-
         let token: String = Input::with_theme(&ColorfulTheme::default())
-            .with_prompt("Request a token in the console and paste it in here: ")
+            .with_prompt("Request a token (sha256~xxx...) in the console and paste it in here: ")
             .interact_text()?;
 
         let pattern = r"sha256~[A-Za-z0-9+/=]{43}";
@@ -274,10 +250,6 @@ impl Kman {
 }
 
 fn main() -> Result<()> {
-    // cluster > context > user
-    // for now, we assume that clusters:contexts:users is a 1:1:1 ratio
-    // just tell users to delete their kubeconfig lol?
-    // assuming a "perfect" kubeconfig, all this CLI has to do is update the token
     let cli = Cli::parse();
     env_logger::Builder::new()
         .filter_level(cli.verbose.log_level_filter())
@@ -299,8 +271,9 @@ fn main() -> Result<()> {
             }
             Commands::Refresh { name } => kman.update_token(name).unwrap(),
         }
+
+        kman.update_kubeconfig(&kubeconfig_location)?;
     }
 
-    kman.update_kubeconfig(&kubeconfig_location)?;
     Ok(())
 }
