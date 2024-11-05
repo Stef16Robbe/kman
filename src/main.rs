@@ -30,13 +30,13 @@ struct Cli {
 enum Commands {
     /// Lists all contexts
     List {},
-    /// Select context (cluster) to use
+    /// Select context to use
     Select {
         /// The context name
         #[clap(short, long)]
         name: String,
     },
-    /// Refresh context (cluster) credentials
+    /// Refresh context token
     Refresh {
         /// The context name
         #[clap(short, long)]
