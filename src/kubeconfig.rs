@@ -51,18 +51,24 @@ pub struct Cluster {
     /// Server is the address of the Kubernetes cluster (https://hostname:port).
     pub server: String,
     /// TLSServerName is used to check server certificate. If TLSServerName is empty, the hostname used to contact the server is used.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub tls_server_name: Option<String>,
     /// InsecureSkipTLSVerify skips the validity check for the server's certificate. This will make your HTTPS connections insecure.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub insecure_skip_verify: Option<bool>,
     /// CertificateAuthority is the path to a cert file for the certificate authority.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub certificate_authority: Option<String>,
     /// CertificateAuthorityData contains PEM-encoded certificate authority certificates. Overrides CertificateAuthority
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub certificate_authority_data: Option<Vec<u8>>,
     /// ProxyURL is the URL to the proxy to be used for all requests made by this client. URLs with "http", "https", and "socks5" schemes are supported. If this configuration is not provided or the empty string, the client attempts to construct a proxy configuration from http_proxy and https_proxy environment variables. If these environment variables are not set, the client does not attempt to proxy requests.
     ///
     /// socks5 proxying does not currently support spdy streaming endpoints (exec, attach, port forward).
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub proxy_url: Option<String>,
     /// DisableCompression allows client to opt-out of response compression for all requests to the server. This is useful to speed up requests (specifically lists) when client-server network bandwidth is ample, by saving time on compression (server-side) and decompression (client-side): https://github.com/Kubernetes/Kubernetes/issues/112296.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub disable_compression: Option<bool>,
 }
 
@@ -83,5 +89,6 @@ pub struct ClusterContext {
     /// User is the user info for this context
     pub user: String,
     /// Namespace is the default namespace to use on unspecified requests
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub namespace: Option<String>,
 }
