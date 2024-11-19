@@ -9,6 +9,7 @@ readme = "README.md"
 license = "MIT"
 keywords = ["kubernetes", "kubeconfig", "openshift"]
 categories = ["command-line-utilities"]
+include = ["**/*.rs", "Cargo.toml"]
 
 [dependencies]
 anyhow = "1.0.92"
