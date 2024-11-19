@@ -9,6 +9,16 @@ This way you retain a minimal amount of contexts that you can properly name & id
 
 ## How do I install it
 
+### Cargo
+
+1. Run `cargo install kman`
+2. You can have "automatic" updates by periodically running [`cargo update`](https://github.com/nabijaczleweli/cargo-update)
+
+### Direct binary installation
+
+> [!WARNING]
+> The binary does not have self-updating capabilities (yet), so you'll have to manually update with new releases
+
 1. Download a binary from the [releases section](https://github.com/Stef16Robbe/kman/releases).
 2. Add the binary to your `$PATH`
 
