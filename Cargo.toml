@@ -7,7 +7,6 @@ description = "A Kubeconfig MANager that allows you to easily refresh oauth toke
 repository = "https://github.com/Stef16Robbe/kman"
 readme = "README.md"
 license = "MIT"
-license-file = "LICENSE"
 keywords = ["kubernetes", "kubeconfig", "openshift"]
 categories = ["command-line-utilities"]
 
