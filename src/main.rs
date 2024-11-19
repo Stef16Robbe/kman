@@ -195,8 +195,10 @@ fn main() -> Result<()> {
         .init();
 
     let base_dirs = BaseDirs::new().unwrap();
-    // for now assuming we always use $HOME/.kube/
-    let kubeconfig_location = base_dirs.home_dir().join(Path::new(".kube/config"));
+    let kubeconfig_location = std::env::var("KUBECONFIG")
+        .map(|v| v.into())
+        .unwrap_or_else(|_| base_dirs.home_dir().join(Path::new(".kube/config")));
+
     let kubeconfig = Kman::load_kubeconfig(&kubeconfig_location).unwrap();
     let mut kman = Kman::new(kubeconfig);
 

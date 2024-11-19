@@ -30,6 +30,8 @@ Options:
   -V, --version     Print version
 ```
 
+You can specify a Kubeconfig file other than the default (`$HOME/.kube/config`) using the `KUBECONFIG` environment variable
+
 ## TODO's
 
 - [x] CI & releases
