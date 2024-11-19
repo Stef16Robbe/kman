@@ -32,6 +32,11 @@ Options:
 
 You can specify a Kubeconfig file other than the default (`$HOME/.kube/config`) using the `KUBECONFIG` environment variable
 
+## Releases
+
+- Update the change log with [git-cliff](https://git-cliff.org/) using `git cliff -o CHANGELOG.md`
+- Add a new tag & release (I do it via the Github CLI)
+
 ## TODO's
 
 - [x] CI & releases
