@@ -33,7 +33,6 @@ enum Commands {
     /// Select context to use
     Select {
         /// The context name
-        #[clap(short, long)]
         name: String,
     },
     /// Refresh context token
