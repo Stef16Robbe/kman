@@ -150,10 +150,10 @@ impl Kman {
             .with_prompt("Request a token (sha256~xxx...) in the console and paste it in here:")
             .interact_text()?;
 
-        let pattern = r"sha256~[A-Za-z0-9\-\_+\/=]{43}";
-        let re = Regex::new(pattern).context("failed to compile regex")?;
+        let token_regex =
+            Regex::new(r"^sha256~[a-zA-Z0-9_-]{43}$").context("failed to compile regex")?;
 
-        if re.is_match(&token) {
+        if token_regex.is_match(&token) {
             for u in &mut self.kubeconfig.users {
                 if u.name == user {
                     u.user.token = token;
