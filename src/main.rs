@@ -1,6 +1,6 @@
 use anyhow::{bail, Context, Result};
 use colored::Colorize;
-use dialoguer::{theme::ColorfulTheme, Input};
+use dialoguer::{theme::ColorfulTheme, Input, Select};
 use human_panic::{setup_panic, Metadata};
 use kubeconfig::KubeConfig;
 use regex::Regex;
@@ -33,7 +33,7 @@ enum Commands {
     /// Select context to use
     Select {
         /// The context name
-        name: String,
+        name: Option<String>,
     },
     /// Refresh context token
     Refresh {
@@ -58,6 +58,14 @@ impl Kman {
         kubeconfig: KubeConfig,
     ) -> Self {
         Self { kubeconfig }
+    }
+
+    fn get_all_contexts(&self) -> Vec<String> {
+        self.kubeconfig
+            .contexts
+            .iter()
+            .map(|c| c.name.clone())
+            .collect()
     }
 
     /// This function prints out the current existing contexts,
@@ -212,7 +220,22 @@ fn main() -> Result<()> {
                 );
             }
             Commands::Select { name } => {
-                kman.select_context(name).unwrap();
+                let context_to_select = if let Some(name) = name {
+                    name
+                } else {
+                    // TODO: highlight current context in this menu
+                    let contexts = kman.get_all_contexts();
+                    let selected_index = Select::with_theme(&ColorfulTheme::default())
+                        .with_prompt("Pick the context you want to use")
+                        .default(0)
+                        .items(&contexts)
+                        .interact()
+                        .unwrap();
+
+                    contexts[selected_index].clone()
+                };
+
+                kman.select_context(context_to_select).unwrap();
             }
             Commands::Refresh { name } => kman.update_token(name).unwrap(),
         }
