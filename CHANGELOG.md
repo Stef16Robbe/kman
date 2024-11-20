@@ -2,6 +2,40 @@
 
 All notable changes to this project will be documented in this file.
 
+## [unreleased]
+
+### ⚙️ Miscellaneous Tasks
+
+- Release v0.2.0
+
+## [0.2.0] - 2024-11-20
+
+### 🚀 Features
+
+- *(remove)* Add ability to remove contexts
+
+### 🐛 Bug Fixes
+
+- *(cargo)* Only include relevant files for publishing
+
+### 📚 Documentation
+
+- *(readme)* Add `publish` step to release docs
+- *(readme)* Update installation instructions
+- *(readme)* Misc fixes
+- *(readme)* Add more background info
+- *(readme)* Fix order of publishing steps
+- *(readme)* Fix release steps
+
+### ⚙️ Miscellaneous Tasks
+
+- *(changelog)* V0.1.0
+- *(cargo)* Add crate info
+- *(cargo)* Remove redundant `license-file`
+- Remove unwraps, improve errors
+- *(gitignore)* Ignore ANY .yaml kubeconfig files
+- Satisfy clippy
+
 ## [0.1.0] - 2024-11-19
 
 ### 🚀 Features
