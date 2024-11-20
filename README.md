@@ -27,7 +27,9 @@ A bit more information on the problem it solves can be found in [this issue](htt
 
 ## How do I use it
 
-```
+(from `kman help`):
+
+```plaintext
 A Kubeconfig MANager that allows you to easily refresh oauth tokens
 
 Usage: kman [OPTIONS] [COMMAND]
@@ -36,6 +38,7 @@ Commands:
   list     Lists all contexts
   select   Select context to use
   refresh  Refresh context token
+  remove   Remove context(s)
   help     Print this message or the help of the given subcommand(s)
 
 Options:
