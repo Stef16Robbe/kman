@@ -11,8 +11,9 @@ This way you retain a minimal amount of contexts that you can properly name & id
 
 ### Cargo
 
-1. Run `cargo install kman`
-2. You can have "automatic" updates by periodically running [`cargo update`](https://github.com/nabijaczleweli/cargo-update)
+1. Make sure you have Rust & Cargo installed: https://www.rust-lang.org/tools/install
+2. Run `cargo install kman`
+3. You can have "automatic" updates by periodically running [`cargo update`](https://github.com/nabijaczleweli/cargo-update)
 
 ### Direct binary installation
 
@@ -25,6 +26,8 @@ This way you retain a minimal amount of contexts that you can properly name & id
 ## How do I use it
 
 ```
+A Kubeconfig MANager that allows you to easily refresh oauth tokens
+
 Usage: kman [OPTIONS] [COMMAND]
 
 Commands:
@@ -45,7 +48,7 @@ You can specify a Kubeconfig file other than the default (`$HOME/.kube/config`) 
 ## Releases
 
 - Update the change log with [git-cliff](https://git-cliff.org/) using `git cliff -o CHANGELOG.md`
-- Add a new tag & release (I do it via the Github CLI)
+- Add a new tag & create a Github release
 - Run `cargo publish`
 
 ## TODO's
