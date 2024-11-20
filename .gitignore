@@ -1,2 +1,2 @@
 /target
-kubeconfig-example.yaml
+*kubeconfig*.yaml*
