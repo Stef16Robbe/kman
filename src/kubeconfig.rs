@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 // Created manually (and adapted to fit OC) using: https://pkg.go.dev/k8s.io/client-go/tools/clientcmd/api/v1#Config
 /// KubeConfig holds the information needed to build connect to remote Kubernetes clusters as a given user
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct KubeConfig {
     /// The api version
     #[serde(rename = "apiVersion")]
@@ -21,7 +21,7 @@ pub struct KubeConfig {
 }
 
 /// NamedUser relates nicknames to user information
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct NamedUser {
     /// Name is the nickname for this User
     pub name: String,
@@ -30,14 +30,14 @@ pub struct NamedUser {
 }
 
 /// User contains information on the authenticated user
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct User {
     /// Token is the user's sha256 token
     pub token: String,
 }
 
 /// NamedCluster relates nicknames to cluster information
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct NamedCluster {
     /// Name is the nickname for this Cluster
     pub name: String,
@@ -46,7 +46,7 @@ pub struct NamedCluster {
 }
 
 /// Cluster contains information about how to communicate with a Kubernetes cluster
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct Cluster {
     /// Server is the address of the Kubernetes cluster (https://hostname:port).
     pub server: String,
@@ -73,7 +73,7 @@ pub struct Cluster {
 }
 
 /// NamedContext relates nicknames to context information
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct NamedContext {
     /// Name is the nickname for this Context
     pub name: String,
@@ -82,7 +82,7 @@ pub struct NamedContext {
 }
 
 /// Context is a tuple of references to a cluster (how do I communicate with a Kubernetes cluster), a user (how do I identify myself), and a namespace (what subset of resources do I want to work with)
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ClusterContext {
     /// Cluster is the name of the cluster for this context
     pub cluster: String,

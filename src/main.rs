@@ -1,8 +1,8 @@
-use anyhow::{bail, Context, Result};
+use anyhow::{bail, Context, Ok, Result};
 use colored::Colorize;
-use dialoguer::{theme::ColorfulTheme, Input, Select};
+use dialoguer::{theme::ColorfulTheme, Input, MultiSelect, Select};
 use human_panic::{setup_panic, Metadata};
-use kubeconfig::KubeConfig;
+use kubeconfig::{KubeConfig, NamedContext};
 use regex::Regex;
 use roxygen::roxygen;
 use std::{
@@ -42,6 +42,8 @@ enum Commands {
         name: Option<String>,
         // TODO: add `--all` option
     },
+    /// Remove context(s)
+    Remove {},
 }
 
 /// Struct used for state management
@@ -60,6 +62,7 @@ impl Kman {
         Self { kubeconfig }
     }
 
+    /// Get all the context in the user's kubeconfig
     fn get_all_contexts(&self) -> Vec<String> {
         self.kubeconfig
             .contexts
@@ -68,7 +71,7 @@ impl Kman {
             .collect()
     }
 
-    /// This function prints out the current existing contexts,
+    /// This returns the current existing contexts,
     /// and shows which is active
     fn list_contexts(&self) -> Result<String> {
         if self.kubeconfig.contexts.is_empty() {
@@ -122,6 +125,7 @@ impl Kman {
         /// The location of the kubeconfig to override
         kubeconfig_location: &PathBuf,
     ) -> Result<()> {
+        // TODO: add context to these `?`'s
         let yaml = serde_yml::to_string(&self.kubeconfig)?;
         let mut kubeconfig = File::create(kubeconfig_location)?;
         kubeconfig.write_all(yaml.as_bytes())?;
@@ -193,6 +197,30 @@ impl Kman {
             serde_yml::from_str(&kubeconfig_str).context("Given file is not a valid Kubeconfig")?;
         Ok(kubeconfig)
     }
+
+    #[roxygen]
+    /// Remove a context from the kubeconfig based on it's name
+    fn remove_context(
+        &mut self,
+        /// The name of the context to remove
+        context_name_to_remove: &str,
+    ) -> Result<()> {
+        // TODO: clean up/remove `users` and `clusters` based on
+        // whether we are removing the final `context` for said cluster/user.
+        // not implemented right now because it technically does not matter,
+        // it would just be proper to do so :)
+        // TODO: notify user if we are removing current context
+        let remaining_contexts: Vec<NamedContext> = self
+            .kubeconfig
+            .contexts
+            .clone()
+            .into_iter()
+            .filter(|c| c.name != context_name_to_remove)
+            .collect();
+
+        self.kubeconfig.contexts = remaining_contexts;
+        Ok(())
+    }
 }
 
 fn main() -> Result<()> {
@@ -253,6 +281,34 @@ fn main() -> Result<()> {
                 kman.select_context(context_to_select)?;
             }
             Commands::Refresh { name } => kman.update_token(name)?,
+            Commands::Remove {} => {
+                // TODO: highlight current context in this menu
+                let contexts = kman.get_all_contexts();
+                let selected = MultiSelect::with_theme(&ColorfulTheme::default())
+                    .with_prompt("Pick the context(s) you want to remove (`space` = select an item, `enter` = confirm selected)")
+                    .items(&contexts)
+                    .interact()?;
+
+                if selected.is_empty() {
+                    bail!("You didn't select any contexts. Press `space` to select.")
+                }
+
+                let contexts_to_remove: Vec<String> = selected
+                    .iter()
+                    .filter_map(|&index| contexts.get(index).map(|s| s.clone()))
+                    .collect();
+
+                println!("{}", "Backing up your kubeconfig just in case...".green());
+
+                let mut backup_kubeconfig_location = kubeconfig_location.clone();
+                backup_kubeconfig_location.set_extension("yaml.bak");
+                kman.update_kubeconfig(&backup_kubeconfig_location)?;
+
+                for context_to_remove in contexts_to_remove {
+                    kman.remove_context(&context_to_remove)?;
+                    println!("Removed context {}!", context_to_remove);
+                }
+            }
         }
 
         kman.update_kubeconfig(&kubeconfig_location)?;
