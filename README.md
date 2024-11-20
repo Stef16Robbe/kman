@@ -7,6 +7,8 @@ A very specific Kubeconfig MANager...
 It's simple; `kman` helps you in updating (expired) Kubernetes oauth tokens in your kubeconfig.
 This way you retain a minimal amount of contexts that you can properly name & identify.
 
+A bit more information on the problem it solves can be found in [this issue](https://github.com/sunny0826/kubecm/issues/1022#issuecomment-2456709999).
+
 ## How do I install it
 
 ### Cargo
