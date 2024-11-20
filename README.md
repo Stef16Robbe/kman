@@ -49,9 +49,9 @@ You can specify a Kubeconfig file other than the default (`$HOME/.kube/config`) 
 
 ## Releases
 
-- Update the change log with [git-cliff](https://git-cliff.org/) using `git cliff -o CHANGELOG.md`
-- Add a new tag & create a Github release
-- Run `cargo publish`
+1. Add a new tag & create a Github release
+2. Update the change log with [git-cliff](https://git-cliff.org/) using `git cliff -o CHANGELOG.md`
+3. Run `cargo publish`
 
 ## TODO's
 
