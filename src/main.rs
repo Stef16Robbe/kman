@@ -71,6 +71,10 @@ impl Kman {
     /// This function prints out the current existing contexts,
     /// and shows which is active
     fn list_contexts(&self) -> Result<String> {
+        if self.kubeconfig.contexts.is_empty() {
+            bail!("Kubeconfig does not contain any contexts");
+        }
+
         let mut out = String::new();
 
         for ctx in &self.kubeconfig.contexts {
@@ -103,7 +107,7 @@ impl Kman {
         }
 
         if !found {
-            bail!("Context does not exist");
+            bail!("Given context does not exist");
         }
 
         println!("Now using context: {}", context_name.green().bold());
@@ -131,15 +135,16 @@ impl Kman {
         &self,
         /// The context name to use
         context_name: String,
-    ) -> String {
-        self.kubeconfig
+    ) -> Result<String> {
+        Ok(self
+            .kubeconfig
             .contexts
             .iter()
             .find(|c| c.name == context_name)
-            .unwrap()
+            .context("Given context does not exist")?
             .context
             .user
-            .clone()
+            .clone())
     }
 
     #[roxygen]
@@ -151,7 +156,7 @@ impl Kman {
     ) -> Result<()> {
         let context_to_update = context_name.unwrap_or(self.kubeconfig.current_context.clone());
 
-        let user = self.get_user_from_context_name(context_to_update);
+        let user = self.get_user_from_context_name(context_to_update)?;
 
         let token: String = Input::with_theme(&ColorfulTheme::default())
             .with_prompt("Request a token (sha256~xxx...) in the console and paste it in here:")
@@ -168,7 +173,7 @@ impl Kman {
                 }
             }
         } else {
-            bail!("Incorrect token given");
+            bail!("Incorrect token given. A token looks like this: `sha256~re5x9PB4OYjn7BLUubSiWkHBYg6QdyflL1-4jcIJvmQ`");
         }
 
         println!("{}", "Token updated succesfully!".green().bold());
@@ -182,8 +187,10 @@ impl Kman {
         /// The kubeconfig file location
         kubeconfig_location: &PathBuf,
     ) -> Result<KubeConfig> {
-        let kubeconfig_str = std::fs::read_to_string(kubeconfig_location)?;
-        let kubeconfig: KubeConfig = serde_yml::from_str(&kubeconfig_str)?;
+        let kubeconfig_str = std::fs::read_to_string(kubeconfig_location)
+            .context("Could not read kubeconfig file")?;
+        let kubeconfig: KubeConfig =
+            serde_yml::from_str(&kubeconfig_str).context("Given file is not a valid Kubeconfig")?;
         Ok(kubeconfig)
     }
 }
@@ -201,18 +208,27 @@ fn main() -> Result<()> {
         .filter_level(cli.verbose.log_level_filter())
         .init();
 
+    // TODO: remove `unwrap()`
     let base_dirs = BaseDirs::new().unwrap();
     let kubeconfig_location = std::env::var("KUBECONFIG")
         .map(|v| v.into())
         .unwrap_or_else(|_| base_dirs.home_dir().join(Path::new(".kube/config")));
 
-    let kubeconfig = Kman::load_kubeconfig(&kubeconfig_location).unwrap();
+    if !kubeconfig_location.exists() {
+        bail!(
+            "No file found at: {}\nYou can specify a custom location with the `KUBECONFIG` environment variable",
+            // TODO: remove `unwrap()`
+            kubeconfig_location.to_str().unwrap()
+        );
+    }
+
+    let kubeconfig = Kman::load_kubeconfig(&kubeconfig_location)?;
     let mut kman = Kman::new(kubeconfig);
 
     if let Some(command) = cli.command {
         match command {
             Commands::List {} => {
-                let contexts = kman.list_contexts().unwrap();
+                let contexts = kman.list_contexts()?;
                 println!(
                     "{}\n\n{}",
                     "Here are your current contexts:".bold(),
@@ -229,15 +245,14 @@ fn main() -> Result<()> {
                         .with_prompt("Pick the context you want to use")
                         .default(0)
                         .items(&contexts)
-                        .interact()
-                        .unwrap();
+                        .interact()?;
 
                     contexts[selected_index].clone()
                 };
 
-                kman.select_context(context_to_select).unwrap();
+                kman.select_context(context_to_select)?;
             }
-            Commands::Refresh { name } => kman.update_token(name).unwrap(),
+            Commands::Refresh { name } => kman.update_token(name)?,
         }
 
         kman.update_kubeconfig(&kubeconfig_location)?;
