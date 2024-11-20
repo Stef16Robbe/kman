@@ -295,7 +295,7 @@ fn main() -> Result<()> {
 
                 let contexts_to_remove: Vec<String> = selected
                     .iter()
-                    .filter_map(|&index| contexts.get(index).map(|s| s.clone()))
+                    .filter_map(|&index| contexts.get(index).cloned())
                     .collect();
 
                 println!("{}", "Backing up your kubeconfig just in case...".green());
