@@ -15,7 +15,7 @@ A bit more information on the problem it solves can be found in [this issue](htt
 
 1. Make sure you have Rust & Cargo installed: https://www.rust-lang.org/tools/install
 2. Run `cargo install kman`
-3. You can have "automatic" updates by periodically running [`cargo update`](https://github.com/nabijaczleweli/cargo-update)
+3. You can have "automatic" updates by periodically running [`cargo install-update -a`](https://github.com/nabijaczleweli/cargo-update)
 
 ### Direct binary installation
 
