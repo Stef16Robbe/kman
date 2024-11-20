@@ -20,7 +20,7 @@ A bit more information on the problem it solves can be found in [this issue](htt
 ### Direct binary installation
 
 > [!WARNING]
-> The binary does not have self-updating capabilities (yet), so you'll have to manually update with new releases
+> `kman` does not have self-updating capabilities (yet), so you'll have to manually update with new releases
 
 1. Download a binary from the [releases section](https://github.com/Stef16Robbe/kman/releases).
 2. Add the binary to your `$PATH`
